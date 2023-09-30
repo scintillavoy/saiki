@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+SCRIPT_PATH=$0
+TARGET_VERSION=$1
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+PROJECT_ROOT_DIR="${PROJECT_ROOT_DIR:-$(git rev-parse --show-toplevel)}"
+REMOTE_NAME="${REMOTE_NAME:-"origin"}"
+BRANCH_PREFIX="${BRANCH_PREFIX:-"release"}"
+BASE_BRANCH="${BASE_BRANCH:-"development"}"
+
+usage() {
+  echo "Usage: $(basename "$SCRIPT_PATH") <release-version>"
+  exit 1
+}
+
+if [ $# -lt 1 ]; then
+  usage
+fi
+
+source "$SCRIPT_DIR/internal"
+
+start
+exit $?
