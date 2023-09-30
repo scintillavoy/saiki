@@ -2,3 +2,4 @@
 
 VERSION=$1
 
+echo "version=$VERSION" > "$PROJECT_ROOT_DIR/gradle.properties"
