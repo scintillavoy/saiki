@@ -6,6 +6,10 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimerTask;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.github.scintillavoy.saiki.Timer.FakeTimer;
 
@@ -46,6 +50,10 @@ public abstract class Clock extends java.time.Clock {
     return new RealClock(java.time.Clock.offset(baseClock, offsetDuration));
   }
 
+  public abstract void sleep(long millis) throws InterruptedException;
+
+  public abstract void sleep(long millis, int nanos) throws InterruptedException;
+
   static final class RealClock extends Clock implements Serializable {
     @java.io.Serial
     private static final long serialVersionUID = 1L;
@@ -85,6 +93,16 @@ public abstract class Clock extends java.time.Clock {
     public String toString() {
       return "RealClock[" + clock + "]";
     }
+
+    @Override
+    public void sleep(long millis) throws InterruptedException {
+      Thread.sleep(millis);
+    }
+
+    @Override
+    public void sleep(long millis, int nanos) throws InterruptedException {
+      Thread.sleep(millis, nanos);
+    }
   }
 
   public static final class FakeClock extends Clock implements Serializable {
@@ -93,6 +111,8 @@ public abstract class Clock extends java.time.Clock {
     private Instant instant;
     private final ZoneId zone;
     private final List<FakeTimer> fakeTimers = new ArrayList<>();
+    private final Lock lock = new ReentrantLock();
+    private final Condition condition = lock.newCondition();
 
     public FakeClock(ZoneId zone) {
       this(Instant.now(), zone);
@@ -136,6 +156,37 @@ public abstract class Clock extends java.time.Clock {
     @Override
     public synchronized String toString() {
       return "FakeClock[" + instant + "," + zone + "]";
+    }
+
+    // TODO(scintillavoy): Check correctness.
+    @Override
+    public void sleep(long millis) throws InterruptedException {
+      lock.lock();
+      try {
+        Timer timer = Timer.of(this);
+        timer.schedule(new TimerTask() {
+          @Override
+          public void run() {
+            lock.lock();
+            try {
+              condition.signal();
+            } finally {
+              lock.unlock();
+            }
+          }
+        }, millis);
+        condition.await();
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    // TODO(scintillavoy): Timer can't handle the time in nanosecond precision,
+    // so it should be the same as void sleep(long millis).
+    @Override
+    public void sleep(long millis, int nanos) {
+      // TODO Auto-generated method stub
+      throw new UnsupportedOperationException("Unimplemented method 'sleep'");
     }
 
     synchronized void addFakeTimer(FakeTimer fakeTimer) {
