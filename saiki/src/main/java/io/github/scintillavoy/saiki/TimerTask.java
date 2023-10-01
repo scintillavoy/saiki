@@ -3,7 +3,7 @@ package io.github.scintillavoy.saiki;
 import java.time.Duration;
 import java.time.Instant;
 
-public abstract class TimerTask implements Runnable, Comparable<TimerTask> {
+abstract class TimerTask implements Runnable, Comparable<TimerTask> {
   final Object lock = new Object();
 
   int state = VIRGIN;
