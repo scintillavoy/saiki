@@ -27,6 +27,8 @@ public class SomeClass {
 In production code, use a clock you want.
 
 ```java
+import io.github.scintillavoy.saiki.Clock;
+
 // This clock is a wrapper of java.time.Clock and works as the same.
 Clock clock = Clock.systemUTC();
 SomeClass instance = new SomeClass(clock);
@@ -36,6 +38,8 @@ During a test, use a `FakeClock` and advance it instead of calling
 `Thread.sleep`.
 
 ```java
+import io.github.scintillavoy.saiki.FakeClock;
+
 // This clock is a fake clock which can be advanced manually.
 FakeClock fakeClock = new FakeClock(ZoneId.of("UTC"));
 SomeClass instance = new SomeClass(fakeClock);
@@ -54,6 +58,10 @@ If you want to use `java.util.Timer` with a `FakeClock`, use `Timer.of` method
 in this library to instantiate a timer.
 
 ```java
+import io.github.scintillavoy.saiki.Clock;
+import io.github.scintillavoy.saiki.Timer;
+import java.util.TimerTask;
+
 Clock clock = Clock.systemUTC();
 
 // This timer is a wrapper of java.util.Timer and works as the same.
@@ -66,12 +74,15 @@ timer.schedule(new TimerTask() {
 }, 4000);
 ```
 
-And use a `FakeClock` for testing.
+And use it with a `FakeClock` for testing.
 
 ```java
+import io.github.scintillavoy.saiki.FakeClock;
+import io.github.scintillavoy.saiki.Timer;
+
 FakeClock fakeClock = new FakeClock(ZoneId.of("UTC"));
 
-// This timer is a FakeTimer and works with a FakeClock.
+// This timer is a fake timer and works with a FakeClock.
 Timer timer = Timer.of(fakeClock);
 timer.schedule(new TimerTask() {
   @Override
